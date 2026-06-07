@@ -50,6 +50,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 15px;
+      margin-bottom: 15px;
     }
     .stat-box {
       background: #f8fafc;
@@ -60,6 +61,32 @@
     }
     .stat-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
     .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-main); }
+
+    /* Circular Pie Charts (Syllabus Completion) */
+    .completion-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    .completion-box {
+      background: #f8fafc; border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 20px 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .completion-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 15px; color: var(--text-main); }
+    .pie-chart {
+      width: 90px; height: 90px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.5s ease-out;
+    }
+    .pie-chart-inner {
+      width: 70px; height: 70px; border-radius: 50%;
+      background: #f8fafc; display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; font-weight: 700; color: var(--text-main);
+    }
+    .completion-details {
+      font-size: 0.85rem; color: var(--text-muted); margin-top: 12px; font-weight: 500;
+    }
 
     /* Buttons */
     .btn {
@@ -98,8 +125,6 @@
       box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
     }
     .today:hover { background: #dbeafe; transform: translateY(-2px); }
-
-    /* Locked days */
     .locked { cursor: not-allowed; opacity: 0.6; }
 
     /* Popup Form */
@@ -118,9 +143,6 @@
     .form-group select, .form-group input, .form-group textarea {
       width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; 
       box-sizing: border-box; font-size: 1rem; background: #f9fafb; color: var(--text-main);
-    }
-    .form-group select:focus, .form-group input:focus, .form-group textarea:focus {
-      outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
     .btn-group { display: flex; gap: 10px; margin-top: 20px; }
     .btn-group .btn { margin-top: 0; }
@@ -151,6 +173,12 @@
     <button class="btn btn-primary" onclick="exportData()">📥 Export Raw Data (CSV)</button>
   </div>
 
+  <div class="card">
+    <h3>📈 Syllabus Completion</h3>
+    <div class="completion-grid" id="syllabusCompletion">
+        </div>
+  </div>
+
   <div id="allCalendars"></div>
 
   <div class="overlay" id="overlay" onclick="closePopup()"></div>
@@ -170,7 +198,6 @@
         <option>Mixtures & Alligations</option>
         <option>Time & Work</option>
         <option>Time, Speed & Distance</option>
-        
         <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 ALGEBRA</option>
         <option>Linear & Quadratic Equations</option>
         <option>Polynomials</option>
@@ -179,14 +206,12 @@
         <option>Functions & Graphs</option>
         <option>Sequences, Series & Progressions</option>
         <option>Surds & Indices</option>
-        
         <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 NUMBER SYSTEM</option>
         <option>Properties of Numbers & Classifications</option>
         <option>Factors & Divisibility Rules</option>
         <option>LCM & HCF</option>
         <option>Remainder Theorems & Cyclicity</option>
         <option>Base System & Factorials</option>
-        
         <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 GEOMETRY & MENSURATION</option>
         <option>Lines, Angles & Triangles</option>
         <option>Quadrilaterals & Polygons</option>
@@ -194,7 +219,6 @@
         <option>Coordinate Geometry</option>
         <option>Trigonometry</option>
         <option>Mensuration (2D & 3D)</option>
-        
         <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 MODERN MATH</option>
         <option>Permutations & Combinations</option>
         <option>Probability</option>
@@ -214,7 +238,6 @@
         <option>Mixed Diagrams & Radar Charts</option>
         <option>Missing Data Interpretation</option>
         <option>Data Sufficiency</option>
-        
         <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">🧩 LOGICAL REASONING</option>
         <option>Linear Arrangements</option>
         <option>Circular & Matrix Arrangements</option>
@@ -240,7 +263,6 @@
         <option>RC - Science, Technology & Environment</option>
         <option>RC - Economics, Business & Politics</option>
         <option>RC - Literature, Art & Culture</option>
-        
         <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">✍️ VERBAL ABILITY</option>
         <option>Para Jumbles (TITA)</option>
         <option>Paragraph Summary</option>
@@ -313,6 +335,59 @@
         <div class="stat-box"><div class="stat-label">Missed</div><div class="stat-value" style="color: var(--missed)">${missedDays}</div></div>
         <div class="stat-box"><div class="stat-label">Mocks</div><div class="stat-value" style="color: var(--primary)">${totalMocks}</div></div>
         <div class="stat-box"><div class="stat-label">Consistency</div><div class="stat-value">${percent}%</div></div>
+      `;
+
+      updateSyllabusCharts();
+    }
+
+    function updateSyllabusCharts() {
+      // 1. Calculate the total chapters automatically from the dropdown lists
+      const totalQuant = document.querySelectorAll('#quantSelect option:not([value=""]):not([disabled])').length;
+      const totalDI = document.querySelectorAll('#diSelect option:not([value=""]):not([disabled])').length;
+      const totalVARC = document.querySelectorAll('#varcSelect option:not([value=""]):not([disabled])').length;
+
+      // 2. Use Sets to store unique chapters studied
+      let quantStudied = new Set();
+      let diStudied = new Set();
+      let varcStudied = new Set();
+
+      for (let i = 0; i < localStorage.length; i++) {
+        try {
+            const data = JSON.parse(localStorage.getItem(localStorage.key(i)));
+            if (data && data.quant) quantStudied.add(data.quant);
+            if (data && data.di) diStudied.add(data.di);
+            if (data && data.english) varcStudied.add(data.english);
+        } catch(e) {}
+      }
+
+      // 3. Calculate Percentages
+      const quantPct = totalQuant > 0 ? Math.round((quantStudied.size / totalQuant) * 100) : 0;
+      const diPct = totalDI > 0 ? Math.round((diStudied.size / totalDI) * 100) : 0;
+      const varcPct = totalVARC > 0 ? Math.round((varcStudied.size / totalVARC) * 100) : 0;
+
+      // 4. Inject Dynamic CSS Pie Charts
+      document.getElementById("syllabusCompletion").innerHTML = `
+        <div class="completion-box">
+            <div class="completion-title">Quantitative</div>
+            <div class="pie-chart" style="background: conic-gradient(var(--primary) ${quantPct}%, var(--border-color) 0);">
+                <div class="pie-chart-inner">${quantPct}%</div>
+            </div>
+            <div class="completion-details">${quantStudied.size} / ${totalQuant} Chapters</div>
+        </div>
+        <div class="completion-box">
+            <div class="completion-title">DI / LR</div>
+            <div class="pie-chart" style="background: conic-gradient(var(--revision) ${diPct}%, var(--border-color) 0);">
+                <div class="pie-chart-inner">${diPct}%</div>
+            </div>
+            <div class="completion-details">${diStudied.size} / ${totalDI} Chapters</div>
+        </div>
+        <div class="completion-box">
+            <div class="completion-title">VARC</div>
+            <div class="pie-chart" style="background: conic-gradient(var(--studied) ${varcPct}%, var(--border-color) 0);">
+                <div class="pie-chart-inner">${varcPct}%</div>
+            </div>
+            <div class="completion-details">${varcStudied.size} / ${totalVARC} Chapters</div>
+        </div>
       `;
     }
 
