@@ -147,8 +147,7 @@
 
   <div class="card">
     <h3>📊 Executive Summary</h3>
-    <div class="dashboard-grid" id="dashboard">
-      </div>
+    <div class="dashboard-grid" id="dashboard"></div>
     <button class="btn btn-primary" onclick="exportData()">📥 Export Raw Data (CSV)</button>
   </div>
 
@@ -162,24 +161,93 @@
       <label>Quant Chapter</label>
       <select id="quantSelect">
         <option value="">-- Select Chapter --</option>
-        <option>Percentages</option><option>Profit & Loss</option><option>Geometry</option>
-        </select>
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 ARITHMETIC</option>
+        <option>Percentages</option>
+        <option>Profit, Loss & Discount</option>
+        <option>Simple & Compound Interest</option>
+        <option>Ratio, Proportion & Variation</option>
+        <option>Averages</option>
+        <option>Mixtures & Alligations</option>
+        <option>Time & Work</option>
+        <option>Time, Speed & Distance</option>
+        
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 ALGEBRA</option>
+        <option>Linear & Quadratic Equations</option>
+        <option>Polynomials</option>
+        <option>Inequalities & Absolute Value</option>
+        <option>Logarithms</option>
+        <option>Functions & Graphs</option>
+        <option>Sequences, Series & Progressions</option>
+        <option>Surds & Indices</option>
+        
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 NUMBER SYSTEM</option>
+        <option>Properties of Numbers & Classifications</option>
+        <option>Factors & Divisibility Rules</option>
+        <option>LCM & HCF</option>
+        <option>Remainder Theorems & Cyclicity</option>
+        <option>Base System & Factorials</option>
+        
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 GEOMETRY & MENSURATION</option>
+        <option>Lines, Angles & Triangles</option>
+        <option>Quadrilaterals & Polygons</option>
+        <option>Circles</option>
+        <option>Coordinate Geometry</option>
+        <option>Trigonometry</option>
+        <option>Mensuration (2D & 3D)</option>
+        
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📖 MODERN MATH</option>
+        <option>Permutations & Combinations</option>
+        <option>Probability</option>
+        <option>Set Theory & Venn Diagrams</option>
+        <option>Binomial Theorem</option>
+      </select>
     </div>
 
     <div class="form-group">
       <label>DI/LR Chapter</label>
       <select id="diSelect">
         <option value="">-- Select Chapter --</option>
-        <option>Tables</option><option>Graphs</option><option>Seating Arrangement</option>
-        </select>
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📊 DATA INTERPRETATION</option>
+        <option>Tables & Data Caselets</option>
+        <option>Bar Graphs & Line Charts</option>
+        <option>Pie Charts</option>
+        <option>Mixed Diagrams & Radar Charts</option>
+        <option>Missing Data Interpretation</option>
+        <option>Data Sufficiency</option>
+        
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">🧩 LOGICAL REASONING</option>
+        <option>Linear Arrangements</option>
+        <option>Circular & Matrix Arrangements</option>
+        <option>Team Formations & Selections</option>
+        <option>Games & Tournaments</option>
+        <option>Quantitative Reasoning</option>
+        <option>Routes & Networks</option>
+        <option>Binary Logic (Truth & Lie)</option>
+        <option>Venn Diagrams (3-4 Variables)</option>
+        <option>Cubes, Dices & Network Paths</option>
+        <option>Blood Relations & Direction Sense</option>
+        <option>Clocks & Calendars</option>
+      </select>
     </div>
 
     <div class="form-group">
       <label>VARC Chapter</label>
       <select id="varcSelect">
         <option value="">-- Select Chapter --</option>
-        <option>Reading Comprehension</option><option>Para Jumbles</option>
-        </select>
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">📚 READING COMPREHENSION</option>
+        <option>RC - Philosophy & Psychology</option>
+        <option>RC - Sociology, History & Anthropology</option>
+        <option>RC - Science, Technology & Environment</option>
+        <option>RC - Economics, Business & Politics</option>
+        <option>RC - Literature, Art & Culture</option>
+        
+        <option disabled style="font-weight: bold; background-color: #e5e7eb; color: #000;">✍️ VERBAL ABILITY</option>
+        <option>Para Jumbles (TITA)</option>
+        <option>Paragraph Summary</option>
+        <option>Odd Sentence Out</option>
+        <option>Paragraph Completion / Sentence Insertion</option>
+        <option>Critical Reasoning (Assumptions/Strengthen/Weaken)</option>
+      </select>
     </div>
 
     <div class="form-group">
@@ -205,11 +273,8 @@
     const today = new Date(); 
     const todayKey = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
     
-    // Set today's date strictly at midnight for accurate past/future comparisons
     const strictToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
-    // Set the hard start date so past dates are permanently ignored
-    const projectStartDate = new Date(2026, 5, 7); // Month is 0-indexed, so 5 = June
+    const projectStartDate = new Date(2026, 5, 7); // June 7, 2026
 
     const diff = Math.floor((examDate - today) / (1000*60*60*24));
     document.getElementById("countdown").innerText = diff + " Days Remaining";
@@ -264,7 +329,6 @@
       for (let d = 1; d <= daysInMonth; d++) {
         const dateObj = new Date(year, month, d);
         
-        // This removes any dates prior to June 7, 2026 entirely from the UI
         if (dateObj < projectStartDate) {
             continue; 
         }
@@ -276,7 +340,6 @@
         div.innerText = d;
         div.id = `day-${key}`;
 
-        // Color coding based on status
         if (localStorage.getItem(key)) {
           div.classList.add("studied");
         } else if (dateObj < strictToday) {
@@ -285,7 +348,6 @@
           div.classList.add("revision");
         }
 
-        // Locking Logic
         if (key === todayKey) {
             div.classList.add("today");
             div.onclick = () => { currentKey = key; openPopup(key); };
