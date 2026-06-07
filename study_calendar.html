@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CAT 2026 Study Tracker</title>
+  <style>
+    /* Professional SaaS Color Palette */
+    :root {
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --primary: #2563eb;       /* Modern Blue */
+      --primary-hover: #1d4ed8;
+      --studied: #10b981;       /* Emerald Green */
+      --missed: #ef4444;        /* Red */
+      --revision: #f59e0b;      /* Amber */
+      --today-border: #3b82f6;
+      --border-color: #e5e7eb;
+    }
+
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: var(--bg-color); 
+      margin: 0; 
+      padding: 20px 10px; 
+      color: var(--text-main);
+    }
+
+    .header-container { text-align: center; margin-bottom: 30px; }
+    h1 { color: var(--text-main); font-size: 2rem; margin: 0 0 5px 0; font-weight: 700; letter-spacing: -0.025em; }
+    #countdown { font-weight: 600; color: var(--primary); margin: 0; font-size: 1.1rem;}
+
+    /* Modern Card UI */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      padding: 20px;
+      margin: 0 auto 20px auto;
+      max-width: 850px;
+    }
+
+    .card h3 { margin: 0 0 15px 0; font-size: 1.1rem; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+
+    /* KPI Dashboard Stats */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    .stat-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-main); }
+
+    /* Buttons */
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: background-color 0.2s, transform 0.1s; color: white; margin-top: 15px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background-color: var(--primary); }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+
+    /* Calendar Grid */
+    .month-title { margin: 0 0 15px 0; color: var(--text-main); font-size: 1.2rem; }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); 
+      gap: 8px;
+    }
+    .day {
+      aspect-ratio: 1; 
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-color); border-radius: 6px; 
+      font-size: 0.95rem; background: #f9fafb; transition: all 0.2s;
+    }
+
+    /* State Colors & Locking */
+    .studied { background-color: var(--studied); color: white; border-color: var(--studied); }
+    .missed { background-color: var(--missed); color: white; border-color: var(--missed); opacity: 0.7; }
+    .revision { background-color: var(--revision); color: white; border-color: var(--revision); }
+    
+    .today { 
+      border: 2px solid var(--today-border); 
+      background: #eff6ff; 
+      font-weight: bold; 
+      color: var(--primary); 
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    .today:hover { background: #dbeafe; transform: translateY(-2px); }
+
+    /* Locked days */
+    .locked { cursor: not-allowed; opacity: 0.6; }
+
+    /* Popup Form */
+    .overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(17, 24, 39, 0.7); z-index: 999; backdrop-filter: blur(4px);
+    }
+    #popupForm {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 90%; max-width: 420px; background: var(--card-bg); border-radius: 12px; 
+      padding: 25px; z-index: 1000; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    #popupForm h2 { margin-top: 0; text-align: center; color: var(--text-main); font-size: 1.4rem;}
+    .form-group { margin-bottom: 15px; text-align: left; }
+    .form-group label { display: block; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+    .form-group select, .form-group input, .form-group textarea {
+      width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; 
+      box-sizing: border-box; font-size: 1rem; background: #f9fafb; color: var(--text-main);
+    }
+    .form-group select:focus, .form-group input:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-group .btn { margin-top: 0; }
+    .btn-cancel { background-color: #9ca3af; }
+
+    /* Elegant Toast Notification */
+    #toast {
+      visibility: hidden; min-width: 250px; background-color: #374151; color: #fff;
+      text-align: center; border-radius: 8px; padding: 16px; position: fixed;
+      z-index: 1001; left: 50%; bottom: 30px; transform: translateX(-50%);
+      font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      transition: visibility 0.5s, opacity 0.5s linear; opacity: 0;
+    }
+    #toast.show { visibility: visible; opacity: 1; }
+
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <h1>CAT 2026 Study Tracker</h1>
+    <p id="countdown"></p>
+  </div>
+
+  <div class="card">
+    <h3>📊 Executive Summary</h3>
+    <div class="dashboard-grid" id="dashboard">
+      </div>
+    <button class="btn btn-primary" onclick="exportData()">📥 Export Raw Data (CSV)</button>
+  </div>
+
+  <div id="allCalendars"></div>
+
+  <div class="overlay" id="overlay" onclick="closePopup()"></div>
+  <div id="popupForm">
+    <h2>Log Today's Session</h2>
+    
+    <div class="form-group">
+      <label>Quant Chapter</label>
+      <select id="quantSelect">
+        <option value="">-- Select Chapter --</option>
+        <option>Percentages</option><option>Profit & Loss</option><option>Geometry</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+      <label>DI/LR Chapter</label>
+      <select id="diSelect">
+        <option value="">-- Select Chapter --</option>
+        <option>Tables</option><option>Graphs</option><option>Seating Arrangement</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+      <label>VARC Chapter</label>
+      <select id="varcSelect">
+        <option value="">-- Select Chapter --</option>
+        <option>Reading Comprehension</option><option>Para Jumbles</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+      <label>Mock Tests Attempted</label>
+      <input type="number" id="mockInput" min="0" placeholder="0">
+    </div>
+
+    <div class="form-group">
+      <label>Key Insights / Notes</label>
+      <textarea id="notesInput" rows="3" placeholder="Identify weak areas, formulas..."></textarea>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-cancel" onclick="closePopup()">Cancel</button>
+      <button class="btn" style="background-color: var(--studied);" onclick="saveEntry()">Save Entry</button>
+    </div>
+  </div>
+
+  <div id="toast">Data can only be logged for today's date.</div>
+
+  <script>
+    const examDate = new Date("Nov 29, 2026");
+    const today = new Date(); 
+    const todayKey = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+    
+    // Set today's date strictly at midnight for accurate past/future comparisons
+    const strictToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // Set the hard start date so past dates are permanently ignored
+    const projectStartDate = new Date(2026, 5, 7); // Month is 0-indexed, so 5 = June
+
+    const diff = Math.floor((examDate - today) / (1000*60*60*24));
+    document.getElementById("countdown").innerText = diff + " Days Remaining";
+
+    const allCalendars = document.getElementById("allCalendars");
+    let currentKey = "";
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.className = "show";
+      setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+
+    function updateDashboard() {
+      let studiedDays = 0, missedDays = 0, totalDays = 0, totalMocks = 0;
+
+      const allDays = document.querySelectorAll('.day');
+      allDays.forEach(day => {
+        totalDays++;
+        if (day.classList.contains('studied')) studiedDays++;
+        if (day.classList.contains('missed')) missedDays++;
+      });
+
+      for (let i = 0; i < localStorage.length; i++) {
+        try {
+            const data = JSON.parse(localStorage.getItem(localStorage.key(i)));
+            if (data && data.mocks) totalMocks += parseInt(data.mocks);
+        } catch(e) {}
+      }
+
+      const percent = totalDays > 0 ? ((studiedDays / totalDays) * 100).toFixed(1) : "0.0";
+      
+      document.getElementById("dashboard").innerHTML = `
+        <div class="stat-box"><div class="stat-label">Studied</div><div class="stat-value" style="color: var(--studied)">${studiedDays}</div></div>
+        <div class="stat-box"><div class="stat-label">Missed</div><div class="stat-value" style="color: var(--missed)">${missedDays}</div></div>
+        <div class="stat-box"><div class="stat-label">Mocks</div><div class="stat-value" style="color: var(--primary)">${totalMocks}</div></div>
+        <div class="stat-box"><div class="stat-label">Consistency</div><div class="stat-value">${percent}%</div></div>
+      `;
+    }
+
+    function createCalendar(year, month) {
+      const monthCard = document.createElement("div");
+      monthCard.className = "card";
+      const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+      monthCard.innerHTML = `<h3 class="month-title">${monthName} ${year}</h3>`;
+      const calendar = document.createElement("div");
+      calendar.className = "calendar";
+
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+      
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateObj = new Date(year, month, d);
+        
+        // This removes any dates prior to June 7, 2026 entirely from the UI
+        if (dateObj < projectStartDate) {
+            continue; 
+        }
+
+        const key = `${year}-${month+1}-${d}`;
+        
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = d;
+        div.id = `day-${key}`;
+
+        // Color coding based on status
+        if (localStorage.getItem(key)) {
+          div.classList.add("studied");
+        } else if (dateObj < strictToday) {
+          div.classList.add("missed");
+        } else if ((examDate - dateObj) / (1000*60*60*24) < 30 && dateObj <= examDate) {
+          div.classList.add("revision");
+        }
+
+        // Locking Logic
+        if (key === todayKey) {
+            div.classList.add("today");
+            div.onclick = () => { currentKey = key; openPopup(key); };
+        } else {
+            div.classList.add("locked");
+            div.onclick = () => { 
+                if(dateObj < strictToday) showToast("Cannot edit past records.");
+                else showToast("Cannot log future dates.");
+            };
+        }
+
+        calendar.appendChild(div);
+      }
+      monthCard.appendChild(calendar);
+      allCalendars.appendChild(monthCard);
+    }
+
+    function openPopup(key) {
+      document.getElementById("overlay").style.display = "block";
+      document.getElementById("popupForm").style.display = "block";
+      
+      const data = JSON.parse(localStorage.getItem(key)) || {};
+      document.getElementById("quantSelect").value = data.quant || "";
+      document.getElementById("diSelect").value = data.di || "";
+      document.getElementById("varcSelect").value = data.english || "";
+      document.getElementById("mockInput").value = data.mocks || "";
+      document.getElementById("notesInput").value = data.notes || "";
+    }
+
+    function closePopup() { 
+      document.getElementById("overlay").style.display = "none";
+      document.getElementById("popupForm").style.display = "none"; 
+    }
+
+    function saveEntry() {
+      const entry = {
+        quant: document.getElementById("quantSelect").value,
+        di: document.getElementById("diSelect").value,
+        english: document.getElementById("varcSelect").value,
+        mocks: parseInt(document.getElementById("mockInput").value) || 0,
+        notes: document.getElementById("notesInput").value
+      };
+      
+      localStorage.setItem(currentKey, JSON.stringify(entry));
+      
+      const dayElement = document.getElementById(`day-${currentKey}`);
+      if (dayElement) {
+          dayElement.classList.remove("missed");
+          dayElement.classList.add("studied");
+      }
+      
+      closePopup();
+      updateDashboard();
+      showToast("Data successfully logged for today.");
+    }
+
+    function exportData() {
+      let csvContent = "data:text/csv;charset=utf-8,Date,Quant,DI,VARC,Mocks,Notes\n";
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          if (data && (data.quant || data.di || data.english || data.notes || data.mocks)) {
+            const notes = data.notes ? `"${data.notes.replace(/"/g, '""')}"` : ""; 
+            csvContent += `${key},${data.quant},${data.di},${data.english},${data.mocks},${notes}\n`;
+          }
+        } catch(e) {}
+      }
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `CAT_2026_Data_Extract_${todayKey}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Initialize Calendars
+    for (let m = 5; m <= 10; m++) { createCalendar(2026, m); }
+    updateDashboard();
+
+  </script>
+</body>
+</html>
